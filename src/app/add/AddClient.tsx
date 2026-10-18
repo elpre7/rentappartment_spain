@@ -14,6 +14,7 @@ export default function AddClient({ campuses, initial }: { campuses: Campus[]; i
   const [pasteUrl, setPasteUrl] = useState("");
   const [pasteText, setPasteText] = useState("");
   const [duplicate, setDuplicate] = useState<number | null>(null);
+  const onlyUrl = /^https?:\/\/\S+$/.test(pasteText.trim());
 
   function applyPaste() {
     setData(parseListing({ url: pasteUrl, text: pasteText }));
@@ -46,22 +47,39 @@ export default function AddClient({ campuses, initial }: { campuses: Campus[]; i
           Datos leídos del anuncio con el marcador. <strong>Revísalos</strong> (sobre todo precio, m² y habitaciones), coloca el piso en el mapa y guarda.
         </p>
       ) : (
-        <details className="card text-sm" open>
-          <summary className="cursor-pointer font-semibold">Rellenar a partir del texto del anuncio</summary>
-          <div className="mt-3 flex flex-col gap-2">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="card flex flex-col gap-2 text-sm">
+            <strong>Opción rápida: el marcador (1 clic)</strong>
             <p className="text-neutral-600 dark:text-neutral-400">
-              En el anuncio de Idealista pulsa <kbd>Ctrl</kbd>+<kbd>A</kbd> y <kbd>Ctrl</kbd>+<kbd>C</kbd>, y pégalo aquí. O más
-              cómodo: usa el <Link className="underline" href="/marcador">marcador</Link>.
+              Con solo el enlace la app no puede leer el anuncio: Idealista bloquea a los programas que descargan sus páginas. El
+              marcador lo lee desde <em>tu</em> Chrome, que Idealista sí deja ver, y rellena todo esto solo.
+            </p>
+            <p>
+              <Link className="btn-primary" href="/marcador">
+                Instalar el marcador
+              </Link>
+            </p>
+          </div>
+          <div className="card flex flex-col gap-2 text-sm">
+            <strong>Alternativa: copiar y pegar el texto</strong>
+            <p className="text-neutral-600 dark:text-neutral-400">
+              En el anuncio de Idealista pulsa <kbd>Ctrl</kbd>+<kbd>A</kbd> (seleccionar todo) y <kbd>Ctrl</kbd>+<kbd>C</kbd> (copiar), y
+              pégalo aquí abajo con <kbd>Ctrl</kbd>+<kbd>V</kbd>.
             </p>
             <input className="input" placeholder="Enlace del anuncio (opcional)" value={pasteUrl} onChange={(e) => setPasteUrl(e.target.value)} />
-            <textarea className="input min-h-28" placeholder="Pega aquí el texto del anuncio…" value={pasteText} onChange={(e) => setPasteText(e.target.value)} />
+            <textarea className="input min-h-24" placeholder="Pega aquí el TEXTO del anuncio (no solo el enlace)…" value={pasteText} onChange={(e) => setPasteText(e.target.value)} />
+            {onlyUrl && (
+              <p className="text-amber-700">
+                Eso es solo el enlace. Pega el texto de la página (Ctrl+A, Ctrl+C en el anuncio) o usa el marcador.
+              </p>
+            )}
             <div>
-              <button type="button" className="btn" onClick={applyPaste} disabled={!pasteText.trim()}>
+              <button type="button" className="btn" onClick={applyPaste} disabled={!pasteText.trim() || onlyUrl}>
                 Leer datos
               </button>
             </div>
           </div>
-        </details>
+        </div>
       )}
 
       {duplicate != null && (
