@@ -110,6 +110,16 @@ test("muebles: se reponen cada 10 años y no se descuentan dos veces en el impue
   near(none.rooms.tax - a.rooms.tax, (furniture / 10) * cfg.tax_rate);
 });
 
+test("caso real: Huelva, 3 hab. a 290 €, 133.500 €, IRPF 30 % → ~2,4 % tras impuestos y no pasa el filtro del 6 %", () => {
+  const huelva: Market = { room_rent: 290, whole_rent_m2: 9, itp_pct: 0.07 };
+  const cfg: AppConfig = { ...DEFAULT_CONFIG, tax_rate: 0.3 };
+  const piso: Listing = { ...base, price: 133500, size_m2: 65, rooms: 3, bathrooms: 1, community_monthly: 20, ibi_annual: 267 };
+  const a = analyzeWith(piso, cfg, huelva);
+  near(a.rooms.cash_flow, 1860, 15);
+  near(a.rooms.coc_after_tax, 0.024, 0.003);
+  assert.equal(verdict(a, 10, cfg).ok, false);
+});
+
 test("veredicto: falla sin ubicación o lejos del campus", () => {
   const cfg: AppConfig = { ...DEFAULT_CONFIG, net_yield_good: 0, coc_good: -1 };
   const a = analyze(base, cfg);

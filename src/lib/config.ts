@@ -152,7 +152,12 @@ export const CONFIG_SECTIONS: {
     title: "Umbrales del veredicto",
     fields: [
       { key: "net_yield_good", label: "Rentabilidad neta mínima", kind: "pct" },
-      { key: "coc_good", label: "Cash-on-cash mínimo", kind: "pct" },
+      {
+        key: "coc_good",
+        label: "Cash-on-cash mínimo tras impuestos",
+        kind: "pct",
+        help: "Lo que te queda al año, después de gastos, hipoteca e IRPF, sobre el dinero que pones tú.",
+      },
       { key: "max_walk_minutes", label: "Máximo andando al campus más cercano (min)", kind: "num" },
     ],
   },

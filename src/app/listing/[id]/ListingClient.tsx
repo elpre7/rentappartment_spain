@@ -53,9 +53,10 @@ function ScenarioTable({ rooms, whole, mortgage }: { rooms: Scenario; whole: Sce
         {mortgage && r((s) => eur(s.cash_invested), "Dinero que pones tú")}
         {mortgage && r((s) => eur(s.annual_debt_service), "Cuotas de hipoteca al año")}
         {r((s) => `${eur(s.cash_flow)} (${eur(s.cash_flow / 12)}/mes)`, "Flujo de caja antes de impuestos", true)}
-        {mortgage && r((s) => pct(s.coc), "Cash-on-cash")}
+        {mortgage && r((s) => pct(s.coc), "Cash-on-cash antes de impuestos")}
         {r((s) => eur(s.tax), "Impuesto estimado")}
         {r((s) => `${eur(s.cash_flow_after_tax)} (${eur(s.cash_flow_after_tax / 12)}/mes)`, "Flujo tras impuestos", true)}
+        {r((s) => pct(s.coc_after_tax), "Cash-on-cash tras impuestos (lo que te queda / lo que pones)", true)}
         {r((s) => eur(s.breakeven_room_rent), "Renta por habitación para no perder dinero")}
       </tbody>
     </table>
@@ -155,7 +156,7 @@ export default function ListingClient({ id }: { id: number }) {
         {!v.ok && <span className="text-sm text-neutral-600 dark:text-neutral-400"> — {v.reasons.join(", ")}</span>}
         <span className="ml-2 text-xs text-neutral-500">
           (neta ≥ {pct(cfg.net_yield_good)}
-          {cfg.use_mortgage && <>, cash-on-cash ≥ {pct(cfg.coc_good)}</>}, ≤ {cfg.max_walk_minutes} min andando)
+          , cash-on-cash tras impuestos ≥ {pct(cfg.coc_good)}, ≤ {cfg.max_walk_minutes} min andando)
         </span>
       </div>
 

@@ -6,8 +6,8 @@ export const METRICS = [
   { key: "best_net", label: "Neta (mejor escenario)" },
   { key: "rooms_net", label: "Neta por habitaciones" },
   { key: "whole_net", label: "Neta piso entero" },
-  { key: "best_coc", label: "Cash-on-cash" },
-  { key: "cash_flow", label: "Flujo de caja/mes" },
+  { key: "best_coc", label: "Cash-on-cash tras impuestos" },
+  { key: "cash_flow", label: "Te queda al mes (tras impuestos)" },
   { key: "walk", label: "Minutos al campus" },
 ] as const;
 
@@ -27,9 +27,9 @@ export function metricValue(e: Evaluated, key: MetricKey): number | null {
     case "whole_net":
       return e.analysis.whole.net_yield;
     case "best_coc":
-      return best(e).coc;
+      return best(e).coc_after_tax;
     case "cash_flow":
-      return best(e).cash_flow / 12;
+      return best(e).cash_flow_after_tax / 12;
     case "walk":
       return e.nearest?.walk_min ?? null;
   }

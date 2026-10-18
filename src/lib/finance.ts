@@ -30,6 +30,8 @@ export interface Scenario {
   annual_debt_service: number;
   cash_flow: number;
   coc: number;
+  /** Lo que te queda tras impuestos sobre el dinero que pones tú. */
+  coc_after_tax: number;
   tax: number;
   cash_flow_after_tax: number;
   /** Renta por habitación para que el flujo de caja (antes de impuestos) sea 0. */
@@ -144,6 +146,7 @@ export function analyze(l: Listing, cfg: AppConfig, market: Market): Analysis {
       annual_debt_service: annualDebt,
       cash_flow: cashFlow,
       coc: cashInvested > 0 ? cashFlow / cashInvested : 0,
+      coc_after_tax: cashInvested > 0 ? (cashFlow - tax) / cashInvested : 0,
       tax,
       cash_flow_after_tax: cashFlow - tax,
       breakeven_room_rent: breakeven,
@@ -171,7 +174,7 @@ export function verdict(a: Analysis, walkMin: number | null, cfg: AppConfig): Ve
   const best = a.rooms.net_yield >= a.whole.net_yield ? a.rooms : a.whole;
   const reasons: string[] = [];
   if (best.net_yield < cfg.net_yield_good) reasons.push("neta por debajo del mínimo");
-  if (cfg.use_mortgage && best.coc < cfg.coc_good) reasons.push("cash-on-cash por debajo del mínimo");
+  if (best.coc_after_tax < cfg.coc_good) reasons.push("te queda poco dinero tras impuestos (cash-on-cash)");
   if (walkMin == null) reasons.push("sin ubicación");
   else if (walkMin > cfg.max_walk_minutes) reasons.push("lejos del campus");
   return { ok: reasons.length === 0, reasons };
