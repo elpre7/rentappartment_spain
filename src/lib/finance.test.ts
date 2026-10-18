@@ -51,8 +51,13 @@ test("sin tope: por habitaciones cobra 4 × 375 y entero 12,3 €/m² × 100", (
   near(a.whole.effective_income, 13530);
 });
 
+test("por defecto no hay tope", () => {
+  assert.equal(DEFAULT_CONFIG.cap_rooms_to_whole, false);
+  assert.equal(analyze(base, DEFAULT_CONFIG).rooms.monthly_rent, 1500);
+});
+
 test("con tope del decreto: habitaciones ≤ piso entero", () => {
-  const a = analyze(base, DEFAULT_CONFIG);
+  const a = analyze(base, { ...DEFAULT_CONFIG, cap_rooms_to_whole: true });
   assert.equal(a.rooms.monthly_rent, 1230);
   assert.equal(a.rooms.capped, true);
   near(a.rooms.rent_per_room, 307.5);

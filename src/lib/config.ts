@@ -77,7 +77,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   furniture_per_room: 1200,
   furniture_common: 2500,
 
-  cap_rooms_to_whole: true,
+  cap_rooms_to_whole: false,
 
   tax_rate: 0.19,
   rental_reduction: 0,
@@ -144,7 +144,7 @@ export const CONFIG_SECTIONS: {
         key: "cap_rooms_to_whole",
         label: "Aplicar tope: habitaciones ≤ piso entero",
         kind: "bool",
-        help: "Decreto de octubre de 2026 (en vigor provisional; votación el 12 de noviembre).",
+        help: "Desactivado por defecto. Actívalo si se aprueba la norma que limita el alquiler por habitaciones.",
       },
     ],
   },

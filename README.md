@@ -55,7 +55,7 @@ el formulario a mano.
 | Hipoteca | 70 % al 3,5 % a 25 años | supuesto |
 | Meses vacíos | 1,5 por habitaciones, 1 entero | verano |
 | Impuesto | 19 % sobre el rendimiento neto | IRNR para residentes en la UE |
-| Tope del decreto | activado | la suma de las habitaciones no puede superar la renta del piso entero |
+| Tope por habitaciones | desactivado | si se activa, la suma de las habitaciones no puede superar la renta del piso entero |
 
 Las coordenadas de los campus son **aproximadas**. Corrígelas en Ajustes (Google Maps → clic derecho → copiar coordenadas).
 
