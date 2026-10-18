@@ -90,6 +90,8 @@ function migrate(d: Database.Database) {
   d.prepare("UPDATE settings SET value = '0' WHERE key = 'utilities_monthly_rooms' AND value = '180'").run();
   // El plazo por defecto pasó de 25 a 30 años; solo se cambia si seguía el valor antiguo.
   d.prepare("UPDATE settings SET value = '30' WHERE key = 'mortgage_years' AND value = '25'").run();
+  // IRPF por defecto: del 19 % (no residente) al 45 % (tramo del usuario).
+  d.prepare("UPDATE settings SET value = '0.45' WHERE key = 'tax_rate' AND value = '0.19'").run();
 }
 
 /**

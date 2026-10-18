@@ -69,7 +69,7 @@ Comunes a todas las ciudades (Ajustes):
 | Meses vacíos | 1,5 por habitaciones, 1 entero | verano |
 | Suministros | 0 € | los pagan los inquilinos; pon un importe si alquilas con gastos incluidos |
 | Muebles | 1.200 € por habitación + 2.500 € zonas comunes, renovados cada 10 años | la parte de cada año cuenta como gasto |
-| Impuesto | 19 % sobre el rendimiento neto | IRNR para residentes en la UE |
+| Impuesto | 45 % sobre el rendimiento neto | tu tramo de IRPF; 19 % si fueras no residente UE |
 | Tope por habitaciones | desactivado | si se activa, la suma de las habitaciones no puede superar la renta del piso entero |
 
 Las coordenadas de los campus son **aproximadas**. Corrígelas en Ajustes (Google Maps → clic derecho → copiar coordenadas).

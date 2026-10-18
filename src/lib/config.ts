@@ -67,7 +67,7 @@ export const DEFAULT_CONFIG: AppConfig = {
 
   cap_rooms_to_whole: false,
 
-  tax_rate: 0.19,
+  tax_rate: 0.45,
   rental_reduction: 0,
   building_share: 0.5,
   building_depreciation: 0.03,
@@ -142,7 +142,7 @@ export const CONFIG_SECTIONS: {
   {
     title: "Impuestos",
     fields: [
-      { key: "tax_rate", label: "Tipo impositivo sobre el rendimiento", kind: "pct", help: "No residente UE (IRNR): 19 %. Residente: tu tipo marginal de IRPF." },
+      { key: "tax_rate", label: "Tipo impositivo sobre el rendimiento", kind: "pct", help: "Residente: tu tipo marginal de IRPF (45 % por defecto). No residente UE (IRNR): 19 %." },
       { key: "rental_reduction", label: "Reducción por alquiler de vivienda", kind: "pct", help: "Habitaciones/temporada para estudiantes: normalmente 0 %." },
       { key: "building_share", label: "Parte del precio que es construcción", kind: "pct", help: "Según el valor catastral del recibo del IBI." },
       { key: "building_depreciation", label: "Amortización anual de la construcción", kind: "pct" },
