@@ -1,19 +1,11 @@
 /**
- * Constantes del modelo financiero. Las fracciones se guardan como tal
- * (0.08, no 8). Los valores editados en /settings se guardan en la tabla
- * `settings` y pisan estos defaults.
- *
- * Los defaults de mercado son de Zaragoza (informe de octubre de 2026):
- * habitación ~375 €/mes (HousingAnywhere, 2025) y piso entero ~12,3 €/m²
- * (idealista, agosto de 2026). Son orientativos: ajústalos con lo que veas.
+ * Constantes del modelo financiero, comunes a todas las ciudades. Las
+ * fracciones se guardan como tal (0.08, no 8). Los valores editados en
+ * /settings se guardan en la tabla `settings` y pisan estos defaults.
+ * Lo que depende de la ciudad (rentas de referencia e ITP) vive en `cities`.
  */
 export interface AppConfig {
-  // Mercado (Zaragoza)
-  room_rent_default: number;
-  whole_rent_m2_default: number;
-
-  // Costes de compra (Aragón)
-  itp_pct: number;
+  // Costes de compra (el ITP es de cada ciudad)
   notary_registry: number;
   gestoria: number;
   appraisal: number;
@@ -53,10 +45,6 @@ export interface AppConfig {
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
-  room_rent_default: 375,
-  whole_rent_m2_default: 12.3,
-
-  itp_pct: 0.08,
   notary_registry: 1500,
   gestoria: 400,
   appraisal: 400,
@@ -98,16 +86,8 @@ export const CONFIG_SECTIONS: {
   fields: { key: keyof AppConfig; label: string; kind: FieldKind; help?: string }[];
 }[] = [
   {
-    title: "Mercado (valores por defecto si el piso no tiene los suyos)",
+    title: "Costes de compra (el ITP se configura en cada ciudad)",
     fields: [
-      { key: "room_rent_default", label: "Renta por habitación (€/mes)", kind: "eur" },
-      { key: "whole_rent_m2_default", label: "Renta piso entero (€/m²/mes)", kind: "num" },
-    ],
-  },
-  {
-    title: "Costes de compra",
-    fields: [
-      { key: "itp_pct", label: "ITP", kind: "pct", help: "Aragón: 8 % general (tramos más altos por encima de 400.000 €). Compruébalo." },
       { key: "notary_registry", label: "Notaría + registro", kind: "eur" },
       { key: "gestoria", label: "Gestoría", kind: "eur" },
       { key: "appraisal", label: "Tasación (solo con hipoteca)", kind: "eur" },

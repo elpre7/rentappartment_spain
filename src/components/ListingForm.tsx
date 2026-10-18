@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import type { Campus, ListingInput } from "@/lib/types";
+import type { Campus, City, ListingInput } from "@/lib/types";
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false });
 
@@ -34,6 +34,7 @@ function toState(v: ListingInput): FormState {
   }
   s.elevator = v.elevator == null ? "" : v.elevator ? "true" : "false";
   s.notes = v.notes ?? "";
+  s.city_id = v.city_id ?? "";
   s.lat = v.lat == null ? "" : String(v.lat);
   s.lng = v.lng == null ? "" : String(v.lng);
   return s;
@@ -47,6 +48,7 @@ function fromState(s: FormState, external_id?: string): ListingInput {
   }
   out.elevator = s.elevator === "" ? null : s.elevator === "true";
   out.notes = s.notes;
+  out.city_id = s.city_id;
   out.lat = s.lat === "" ? null : Number(s.lat);
   out.lng = s.lng === "" ? null : Number(s.lng);
   if (external_id !== undefined) out.external_id = external_id;
@@ -55,18 +57,20 @@ function fromState(s: FormState, external_id?: string): ListingInput {
 
 interface Props {
   initial: ListingInput;
+  cities: City[];
   campuses: Campus[];
   submitLabel: string;
   showOverrides?: boolean;
   onSubmit: (data: ListingInput) => Promise<string | null>;
 }
 
-export default function ListingForm({ initial, campuses, submitLabel, showOverrides, onSubmit }: Props) {
+export default function ListingForm({ initial, cities, campuses, submitLabel, showOverrides, onSubmit }: Props) {
   const [s, setS] = useState<FormState>(() => toState(initial));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const set = (k: string, v: string) => setS((prev) => ({ ...prev, [k]: v }));
   const picked = s.lat !== "" && s.lng !== "" ? { lat: Number(s.lat), lng: Number(s.lng) } : null;
+  const city = cities.find((c) => c.id === s.city_id);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -95,6 +99,19 @@ export default function ListingForm({ initial, campuses, submitLabel, showOverri
   return (
     <form onSubmit={submit} className="grid gap-6 lg:grid-cols-2">
       <div className="flex flex-col gap-4">
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-neutral-600 dark:text-neutral-400">Ciudad *</span>
+          <select className="input" value={s.city_id} onChange={(e) => set("city_id", e.target.value)}>
+            {!city && <option value="">Elige la ciudad…</option>}
+            {cities
+              .filter((c) => c.active || c.id === s.city_id)
+              .map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.region})
+                </option>
+              ))}
+          </select>
+        </label>
         <div className="grid grid-cols-2 gap-3">
           {BASIC.map((f) => (f.type === "text" && f.key !== "floor" ? <div key={f.key} className="col-span-2">{field(f)}</div> : field(f)))}
           <label className="flex flex-col gap-1 text-sm">
@@ -128,7 +145,8 @@ export default function ListingForm({ initial, campuses, submitLabel, showOverri
           )}
         </p>
         <MapView
-          campuses={campuses}
+          campuses={campuses.filter((c) => c.city_id === s.city_id)}
+          center={city ? { lat: city.lat, lng: city.lng } : undefined}
           picked={picked}
           onPick={(lat, lng) => setS((prev) => ({ ...prev, lat: lat.toFixed(6), lng: lng.toFixed(6) }))}
           className="h-[420px] w-full"

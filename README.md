@@ -1,6 +1,8 @@
 # CampusRent
 
-App local para analizar pisos de **3-4 habitaciones** para alquilar a **estudiantes**. Empieza por **Zaragoza**.
+App local para analizar pisos de **3-4 habitaciones** para alquilar a **estudiantes**, en varias ciudades
+universitarias: Zaragoza, Huelva, Jaén, Burgos, León, Huesca y Castellón vienen ya configuradas y puedes añadir más
+desde Ajustes.
 
 Para cada piso calcula dos escenarios, **por habitaciones** y **piso entero a un grupo**. Cada uno incluye
 ITP, notaría, hipoteca, comunidad, IBI, seguros, meses vacíos en verano, suministros, muebles e impuestos.
@@ -47,11 +49,22 @@ el formulario a mano.
 
 ## Supuestos por defecto (revísalos)
 
-| Supuesto | Valor | De dónde sale |
+Cada ciudad tiene su renta de referencia por habitación, su renta por m² del piso entero y el ITP de su comunidad
+(Ajustes → Ciudades). Se usan solo si el piso no tiene las suyas: en la ficha puedes poner las de la zona.
+
+| Ciudad | Habitación | Piso entero | ITP | Fuente de las rentas |
+| --- | --- | --- | --- | --- |
+| Zaragoza | 375 €/mes | 12,3 €/m² | 8 % | HousingAnywhere 2025; idealista ago. 2026 |
+| León | 300 €/mes | 8,5 €/m² | 8 % | habitación: idealista jun. 2026; piso: estimación |
+| Jaén | 230 €/mes | 7,5 €/m² | 7 % | habitación: idealista 2024 + subida; piso: estimación |
+| Huelva, Burgos, Huesca, Castellón | 260–300 €/mes | 9–10 €/m² | 7–10 % | estimación propia |
+
+Los tipos de ITP son el general de cada comunidad, de memoria: compruébalos.
+
+Comunes a todas las ciudades (Ajustes):
+
+| Supuesto | Valor | Nota |
 | --- | --- | --- |
-| Habitación | 375 €/mes | HousingAnywhere, Zaragoza 2025 |
-| Piso entero | 12,3 €/m²/mes | idealista, agosto de 2026 |
-| ITP Aragón | 8 % | tramo general, compruébalo |
 | Hipoteca | 70 % al 3,5 % a 25 años | supuesto |
 | Meses vacíos | 1,5 por habitaciones, 1 entero | verano |
 | Impuesto | 19 % sobre el rendimiento neto | IRNR para residentes en la UE |

@@ -2,7 +2,7 @@ import Database from "better-sqlite3";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { DEFAULT_CAMPUSES } from "./campuses";
+import { SEED_CITIES } from "./cities";
 
 let db: Database.Database | null = null;
 
@@ -50,6 +50,19 @@ CREATE TABLE IF NOT EXISTS settings (
   value TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS cities (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  region TEXT NOT NULL DEFAULT '',
+  lat REAL NOT NULL,
+  lng REAL NOT NULL,
+  room_rent REAL NOT NULL,
+  whole_rent_m2 REAL NOT NULL,
+  itp_pct REAL NOT NULL,
+  rent_source TEXT NOT NULL DEFAULT '',
+  active INTEGER NOT NULL DEFAULT 1
+);
+
 CREATE TABLE IF NOT EXISTS campuses (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
@@ -60,17 +73,65 @@ CREATE TABLE IF NOT EXISTS campuses (
 );
 `;
 
+function hasColumn(d: Database.Database, table: string, column: string): boolean {
+  return (d.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).some((c) => c.name === column);
+}
+
+/** Bases de datos de antes de las ciudades: todo lo existente era de Zaragoza. */
+function migrate(d: Database.Database) {
+  for (const table of ["listings", "campuses"]) {
+    if (!hasColumn(d, table, "city_id")) {
+      d.exec(`ALTER TABLE ${table} ADD COLUMN city_id TEXT NOT NULL DEFAULT 'zaragoza'`);
+    }
+  }
+  d.exec("CREATE INDEX IF NOT EXISTS idx_listings_city ON listings(city_id)");
+}
+
+/**
+ * Da de alta las ciudades que falten (nunca pisa las que ya existen, que el
+ * usuario puede haber editado) y sus campus, solo si esa ciudad no tiene ninguno.
+ * Si Zaragoza tenía rentas/ITP propios en Ajustes (versión anterior), se conservan.
+ */
+function seed(d: Database.Database) {
+  const legacy: Record<string, number> = {};
+  for (const r of d.prepare("SELECT key, value FROM settings WHERE key IN ('room_rent_default','whole_rent_m2_default','itp_pct')").all() as {
+    key: string;
+    value: string;
+  }[]) {
+    const n = Number(JSON.parse(r.value));
+    if (Number.isFinite(n)) legacy[r.key] = n;
+  }
+  const insCity = d.prepare(
+    `INSERT OR IGNORE INTO cities (id, name, region, lat, lng, room_rent, whole_rent_m2, itp_pct, rent_source, active)
+     VALUES (@id, @name, @region, @lat, @lng, @room_rent, @whole_rent_m2, @itp_pct, @rent_source, @active)`,
+  );
+  const countCampuses = d.prepare("SELECT COUNT(*) AS n FROM campuses WHERE city_id = ?");
+  const insCampus = d.prepare(
+    "INSERT INTO campuses (city_id, name, university, lat, lng, active) VALUES (@city_id, @name, @university, @lat, @lng, @active)",
+  );
+  d.transaction(() => {
+    for (const { campuses, ...city } of SEED_CITIES) {
+      const row = { ...city, active: city.active ? 1 : 0 };
+      if (city.id === "zaragoza") {
+        row.room_rent = legacy.room_rent_default ?? row.room_rent;
+        row.whole_rent_m2 = legacy.whole_rent_m2_default ?? row.whole_rent_m2;
+        row.itp_pct = legacy.itp_pct ?? row.itp_pct;
+      }
+      const created = insCity.run(row).changes > 0;
+      const { n } = countCampuses.get(city.id) as { n: number };
+      if (created && n === 0) {
+        for (const c of campuses) insCampus.run({ ...c, city_id: city.id, active: c.active ? 1 : 0 });
+      }
+    }
+  })();
+}
+
 export function getDb(): Database.Database {
   if (db) return db;
   db = new Database(resolveDbPath());
   db.pragma("journal_mode = WAL");
   db.exec(SCHEMA);
-  const { n } = db.prepare("SELECT COUNT(*) AS n FROM campuses").get() as { n: number };
-  if (n === 0) {
-    const ins = db.prepare(
-      "INSERT INTO campuses (name, university, lat, lng, active) VALUES (@name, @university, @lat, @lng, @active)",
-    );
-    for (const c of DEFAULT_CAMPUSES) ins.run({ ...c, active: c.active ? 1 : 0 });
-  }
+  migrate(db);
+  seed(db);
   return db;
 }

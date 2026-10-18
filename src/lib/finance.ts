@@ -1,5 +1,8 @@
 import type { AppConfig } from "./config";
-import type { Listing } from "./types";
+import type { City, Listing } from "./types";
+
+/** Lo que depende de la ciudad: rentas de referencia e ITP. */
+export type Market = Pick<City, "room_rent" | "whole_rent_m2" | "itp_pct">;
 
 export type ScenarioKey = "rooms" | "whole";
 
@@ -56,17 +59,17 @@ export function rentableRooms(l: Pick<Listing, "rooms" | "rentable_rooms">): num
   return Math.max(0, l.rentable_rooms ?? l.rooms);
 }
 
-export function wholeRent(l: Pick<Listing, "whole_rent" | "size_m2">, cfg: AppConfig): number {
-  return l.whole_rent ?? Math.round(l.size_m2 * cfg.whole_rent_m2_default);
+export function wholeRent(l: Pick<Listing, "whole_rent" | "size_m2">, market: Market): number {
+  return l.whole_rent ?? Math.round(l.size_m2 * market.whole_rent_m2);
 }
 
-export function analyze(l: Listing, cfg: AppConfig): Analysis {
+export function analyze(l: Listing, cfg: AppConfig, market: Market): Analysis {
   const price = l.price;
   const nRooms = rentableRooms(l);
-  const whole = wholeRent(l, cfg);
-  const roomRent = l.room_rent ?? cfg.room_rent_default;
+  const whole = wholeRent(l, market);
+  const roomRent = l.room_rent ?? market.room_rent;
 
-  const itp = price * cfg.itp_pct;
+  const itp = price * market.itp_pct;
   const purchase_costs =
     itp + cfg.notary_registry + cfg.gestoria + (cfg.use_mortgage ? cfg.appraisal : 0);
   const loan = cfg.use_mortgage ? price * cfg.ltv : 0;

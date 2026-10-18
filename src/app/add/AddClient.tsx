@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ListingForm from "@/components/ListingForm";
+import { detectCity } from "@/lib/cities";
 import { parseListing } from "@/lib/parseListing";
-import type { Campus, ListingInput } from "@/lib/types";
+import type { Campus, City, ListingInput } from "@/lib/types";
 
-export default function AddClient({ campuses, initial }: { campuses: Campus[]; initial: ListingInput | null }) {
+export default function AddClient({ cities, campuses, initial }: { cities: City[]; campuses: Campus[]; initial: ListingInput | null }) {
   const router = useRouter();
   const [data, setData] = useState<ListingInput>(initial ?? {});
   const [formKey, setFormKey] = useState(0);
@@ -17,7 +18,7 @@ export default function AddClient({ campuses, initial }: { campuses: Campus[]; i
   const onlyUrl = /^https?:\/\/\S+$/.test(pasteText.trim());
 
   function applyPaste() {
-    setData(parseListing({ url: pasteUrl, text: pasteText }));
+    setData({ ...parseListing({ url: pasteUrl, text: pasteText }), city_id: detectCity(pasteText, cities.filter((c) => c.active)) });
     setFormKey((k) => k + 1);
   }
 
@@ -88,7 +89,7 @@ export default function AddClient({ campuses, initial }: { campuses: Campus[]; i
         </p>
       )}
 
-      <ListingForm key={formKey} initial={data} campuses={campuses} submitLabel="Guardar y analizar" onSubmit={save} />
+      <ListingForm key={formKey} initial={data} cities={cities} campuses={campuses} submitLabel="Guardar y analizar" onSubmit={save} />
     </div>
   );
 }

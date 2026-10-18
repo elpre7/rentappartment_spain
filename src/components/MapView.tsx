@@ -22,16 +22,18 @@ interface Props {
   onPointClick?: (id: number) => void;
   /** Punto destacado (el piso que se está editando). */
   picked?: { lat: number; lng: number } | null;
+  /** Centro inicial y al que se vuelve cuando cambia (p. ej. al elegir otra ciudad). */
+  center?: { lat: number; lng: number; zoom?: number };
   className?: string;
 }
 
-const ZARAGOZA: [number, number] = [41.6488, -0.8891];
+const DEFAULT_CENTER = { lat: 41.6488, lng: -0.8891, zoom: 13 };
 
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
-export default function MapView({ campuses, points = [], onPick, onPointClick, picked, className }: Props) {
+export default function MapView({ campuses, points = [], onPick, onPointClick, picked, center, className }: Props) {
   const el = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const layerRef = useRef<LayerGroup | null>(null);
@@ -39,9 +41,11 @@ export default function MapView({ campuses, points = [], onPick, onPointClick, p
   // Los callbacks cambian en cada render; el mapa se crea una vez y lee siempre el último.
   const onPickRef = useRef(onPick);
   const onPointClickRef = useRef(onPointClick);
+  const centerRef = useRef(center);
   useEffect(() => {
     onPickRef.current = onPick;
     onPointClickRef.current = onPointClick;
+    centerRef.current = center;
   });
 
   useEffect(() => {
@@ -49,7 +53,9 @@ export default function MapView({ campuses, points = [], onPick, onPointClick, p
     import("leaflet").then((L) => {
       if (cancelled || !el.current || mapRef.current) return;
       LRef.current = L;
-      const map = L.map(el.current).setView(picked ? [picked.lat, picked.lng] : ZARAGOZA, picked ? 15 : 13);
+      // El centro puede haber cambiado mientras se cargaba Leaflet: se lee el último.
+      const start = picked ? { lat: picked.lat, lng: picked.lng, zoom: 15 } : (centerRef.current ?? DEFAULT_CENTER);
+      const map = L.map(el.current).setView([start.lat, start.lng], start.zoom ?? 13);
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
         attribution: "&copy; OpenStreetMap",
@@ -98,6 +104,13 @@ export default function MapView({ campuses, points = [], onPick, onPointClick, p
   }
 
   useEffect(draw);
+
+  const centerKey = center ? `${center.lat},${center.lng},${center.zoom ?? 13}` : "";
+  useEffect(() => {
+    if (center && mapRef.current) mapRef.current.setView([center.lat, center.lng], center.zoom ?? 13);
+    // Solo al cambiar de centro (centerKey), no en cada render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [centerKey]);
 
   return <div ref={el} className={className ?? "h-full min-h-[300px] w-full"} />;
 }

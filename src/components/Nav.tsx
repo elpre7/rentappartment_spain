@@ -16,7 +16,6 @@ export default function Nav() {
     <header className="flex flex-wrap items-center gap-1 border-b border-neutral-200 bg-white px-4 py-2 dark:border-neutral-800 dark:bg-neutral-950">
       <Link href="/" className="mr-4 font-black tracking-tight">
         CAMPUS<span className="text-orange-700">RENT</span>
-        <span className="ml-2 text-xs font-normal text-neutral-500">Zaragoza</span>
       </Link>
       {LINKS.map((l) => {
         const active = l.href === "/" ? path === "/" : path.startsWith(l.href);

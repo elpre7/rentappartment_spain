@@ -1,6 +1,7 @@
 import { getDb } from "./db";
 import { type AppConfig, DEFAULT_CONFIG, mergeConfig } from "./config";
-import { STATUSES, type Campus, type Listing, type ListingInput } from "./types";
+import { evaluate, type Evaluated } from "./evaluate";
+import { STATUSES, type Campus, type City, type Listing, type ListingInput } from "./types";
 
 type Row = Record<string, unknown>;
 
@@ -25,7 +26,7 @@ const NUMBER_FIELDS = [
   "lat",
   "lng",
 ] as const;
-const TEXT_FIELDS = ["url", "external_id", "title", "address", "floor", "notes"] as const;
+const TEXT_FIELDS = ["city_id", "url", "external_id", "title", "address", "floor", "notes"] as const;
 const REQUIRED = ["price", "size_m2", "rooms"] as const;
 
 /** Valida y normaliza lo que llega del navegador. Lanza Error con un mensaje en español. */
@@ -55,7 +56,9 @@ export function sanitizeInput(input: Record<string, unknown>, partial: boolean):
     if (!STATUSES.some((x) => x.key === s)) throw new Error("Estado no válido");
     out.status = s;
   }
+  if ("city_id" in out && !getCity(String(out.city_id))) throw new Error("Ciudad desconocida");
   if (!partial) {
+    if (!out.city_id) throw new Error("Falta la ciudad");
     for (const k of REQUIRED) {
       if (out[k] == null) throw new Error(`Falta ${k === "size_m2" ? "superficie" : k === "rooms" ? "habitaciones" : "precio"}`);
     }
@@ -130,8 +133,57 @@ export function resetConfig(): AppConfig {
   return getConfig();
 }
 
+function toCity(r: Row): City {
+  return { ...(r as unknown as City), active: Boolean(r.active) };
+}
+
+export function listCities(): City[] {
+  return (getDb().prepare("SELECT * FROM cities ORDER BY name").all() as Row[]).map(toCity);
+}
+
+export function getCity(id: string): City | null {
+  const r = getDb().prepare("SELECT * FROM cities WHERE id = ?").get(id) as Row | undefined;
+  return r ? toCity(r) : null;
+}
+
+/** "Castellón de la Plana" → "castellon-de-la-plana" */
+export function slugify(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/** Crea o actualiza ciudades (no se borran: se desactivan). */
+export function saveCities(cities: Partial<City>[]): City[] {
+  const rows = cities.map((c) => {
+    const name = String(c.name ?? "").trim();
+    if (!name) throw new Error("Cada ciudad necesita un nombre");
+    const nums = { lat: Number(c.lat), lng: Number(c.lng), room_rent: Number(c.room_rent), whole_rent_m2: Number(c.whole_rent_m2), itp_pct: Number(c.itp_pct) };
+    for (const [k, v] of Object.entries(nums)) if (!Number.isFinite(v)) throw new Error(`Valor no válido en ${name} (${k})`);
+    return {
+      id: c.id || slugify(name),
+      name,
+      region: String(c.region ?? ""),
+      ...nums,
+      rent_source: String(c.rent_source ?? ""),
+      active: c.active === false ? 0 : 1,
+    };
+  });
+  const db = getDb();
+  const up = db.prepare(`INSERT INTO cities (id, name, region, lat, lng, room_rent, whole_rent_m2, itp_pct, rent_source, active)
+    VALUES (@id, @name, @region, @lat, @lng, @room_rent, @whole_rent_m2, @itp_pct, @rent_source, @active)
+    ON CONFLICT(id) DO UPDATE SET name = excluded.name, region = excluded.region, lat = excluded.lat, lng = excluded.lng,
+      room_rent = excluded.room_rent, whole_rent_m2 = excluded.whole_rent_m2, itp_pct = excluded.itp_pct,
+      rent_source = excluded.rent_source, active = excluded.active`);
+  db.transaction(() => rows.forEach((r) => up.run(r)))();
+  return listCities();
+}
+
 export function listCampuses(): Campus[] {
-  return (getDb().prepare("SELECT * FROM campuses ORDER BY id").all() as Row[]).map((r) => ({
+  return (getDb().prepare("SELECT * FROM campuses ORDER BY city_id, id").all() as Row[]).map((r) => ({
     ...(r as unknown as Campus),
     active: Boolean(r.active),
   }));
@@ -141,13 +193,20 @@ export function listCampuses(): Campus[] {
 export function saveCampuses(campuses: Omit<Campus, "id">[]): Campus[] {
   for (const c of campuses) {
     if (!c.name?.trim()) throw new Error("Cada campus necesita un nombre");
+    if (!getCity(c.city_id)) throw new Error(`Ciudad desconocida en ${c.name}`);
     if (!Number.isFinite(Number(c.lat)) || !Number.isFinite(Number(c.lng))) throw new Error(`Coordenadas no válidas en ${c.name}`);
   }
   const db = getDb();
   db.transaction(() => {
     db.prepare("DELETE FROM campuses").run();
-    const ins = db.prepare("INSERT INTO campuses (name, university, lat, lng, active) VALUES (?, ?, ?, ?, ?)");
-    for (const c of campuses) ins.run(c.name.trim(), c.university ?? "", Number(c.lat), Number(c.lng), c.active ? 1 : 0);
+    const ins = db.prepare("INSERT INTO campuses (city_id, name, university, lat, lng, active) VALUES (?, ?, ?, ?, ?, ?)");
+    for (const c of campuses) ins.run(c.city_id, c.name.trim(), c.university ?? "", Number(c.lat), Number(c.lng), c.active ? 1 : 0);
   })();
   return listCampuses();
+}
+
+/** Un piso evaluado con su ciudad, o null si no existe. */
+export function evaluateListing(l: Listing, cfg: AppConfig = getConfig(), campuses: Campus[] = listCampuses()): Evaluated | null {
+  const city = getCity(l.city_id);
+  return city ? evaluate(l, cfg, city, campuses) : null;
 }

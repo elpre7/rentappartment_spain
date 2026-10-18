@@ -11,6 +11,7 @@ export type Status = (typeof STATUSES)[number]["key"];
 
 export interface Listing {
   id: number;
+  city_id: string;
   url: string;
   external_id: string;
   title: string;
@@ -41,8 +42,26 @@ export interface Listing {
 /** Campos que se pueden crear/editar desde la API. */
 export type ListingInput = Partial<Omit<Listing, "id" | "created_at" | "updated_at">>;
 
+export interface City {
+  /** Identificador corto, p. ej. "zaragoza". */
+  id: string;
+  name: string;
+  region: string;
+  lat: number;
+  lng: number;
+  /** Renta por habitación de referencia (€/mes). */
+  room_rent: number;
+  /** Renta de piso entero de referencia (€/m²/mes). */
+  whole_rent_m2: number;
+  itp_pct: number;
+  /** De dónde salen las rentas de referencia (se enseña en la ficha). */
+  rent_source: string;
+  active: boolean;
+}
+
 export interface Campus {
   id: number;
+  city_id: string;
   name: string;
   university: string;
   lat: number;

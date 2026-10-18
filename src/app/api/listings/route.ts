@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { evaluate } from "@/lib/evaluate";
-import { createListing, findByExternalId, getConfig, listCampuses, listListings } from "@/lib/store";
+import { createListing, evaluateListing, findByExternalId, getConfig, listCampuses, listCities, listListings } from "@/lib/store";
 
 export async function GET() {
   const cfg = getConfig();
   const campuses = listCampuses();
   return NextResponse.json({
-    results: listListings().map((l) => evaluate(l, cfg, campuses)),
+    results: listListings()
+      .map((l) => evaluateListing(l, cfg, campuses))
+      .filter(Boolean),
     campuses,
+    cities: listCities(),
     config: cfg,
   });
 }

@@ -1,5 +1,6 @@
+import { detectCity } from "@/lib/cities";
 import { parseListing, type CapturedPage } from "@/lib/parseListing";
-import { listCampuses } from "@/lib/store";
+import { listCampuses, listCities } from "@/lib/store";
 import AddClient from "./AddClient";
 
 export const dynamic = "force-dynamic";
@@ -14,5 +15,12 @@ export default async function AddPage({ searchParams }: { searchParams: Promise<
       captured = null;
     }
   }
-  return <AddClient campuses={listCampuses()} initial={captured ? parseListing(captured) : null} />;
+  const cities = listCities();
+  const initial = captured
+    ? {
+        ...parseListing(captured),
+        city_id: detectCity([captured.address, captured.title, captured.text].filter(Boolean).join("\n"), cities.filter((c) => c.active)),
+      }
+    : null;
+  return <AddClient cities={cities} campuses={listCampuses()} initial={initial} />;
 }

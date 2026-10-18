@@ -9,7 +9,7 @@ import type { AppConfig } from "@/lib/config";
 import type { Evaluated } from "@/lib/evaluate";
 import { eur } from "@/lib/format";
 import { METRICS, metricColor, metricLabel, metricSortValue, type MetricKey } from "@/lib/metrics";
-import { STATUSES, type Campus } from "@/lib/types";
+import { STATUSES, type Campus, type City } from "@/lib/types";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -17,6 +17,8 @@ export default function Home() {
   const router = useRouter();
   const [results, setResults] = useState<Evaluated[] | null>(null);
   const [campuses, setCampuses] = useState<Campus[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [cityId, setCityId] = useState<string>("all");
   const [cfg, setCfg] = useState<AppConfig | null>(null);
   const [metric, setMetric] = useState<MetricKey>("best_net");
   const [onlyOk, setOnlyOk] = useState(false);
@@ -29,6 +31,12 @@ export default function Home() {
       .then((d) => {
         setResults(d.results);
         setCampuses(d.campuses);
+        setCities(d.cities);
+        // Por defecto, la ciudad con más pisos guardados (o todas si no hay ninguno).
+        const counts = new Map<string, number>();
+        for (const e of d.results as Evaluated[]) counts.set(e.listing.city_id, (counts.get(e.listing.city_id) ?? 0) + 1);
+        const top = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
+        if (top) setCityId(top[0]);
         setCfg(d.config);
       });
   }, []);
@@ -36,11 +44,14 @@ export default function Home() {
   const visible = useMemo(() => {
     if (!results) return [];
     return results
+      .filter((e) => cityId === "all" || e.listing.city_id === cityId)
       .filter((e) => showDiscarded || e.listing.status !== "descartado")
       .filter((e) => e.listing.rooms >= minRooms)
       .filter((e) => !onlyOk || e.verdict.ok)
       .sort((a, b) => metricSortValue(b, metric) - metricSortValue(a, metric));
-  }, [results, metric, onlyOk, showDiscarded, minRooms]);
+  }, [results, metric, onlyOk, showDiscarded, minRooms, cityId]);
+
+  const selectedCity = cities.find((c) => c.id === cityId);
 
   const points: MapPoint[] = cfg
     ? visible
@@ -59,6 +70,23 @@ export default function Home() {
     <div className="grid min-h-0 flex-1 lg:grid-cols-[420px_1fr]">
       <aside className="flex min-h-0 flex-col border-r border-neutral-200 dark:border-neutral-800">
         <div className="flex flex-col gap-2 border-b border-neutral-200 p-3 text-sm dark:border-neutral-800">
+          <div className="flex items-center gap-2">
+            <span>Ciudad</span>
+            <select className="input w-auto flex-1" value={cityId} onChange={(e) => setCityId(e.target.value)}>
+              <option value="all">Todas (comparar)</option>
+              {cities
+                .filter((c) => c.active)
+                .map((c) => {
+                  const n = results?.filter((e) => e.listing.city_id === c.id).length ?? 0;
+                  return (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                      {n > 0 ? ` (${n})` : ""}
+                    </option>
+                  );
+                })}
+            </select>
+          </div>
           <div className="flex items-center gap-2">
             <span>Ordenar por</span>
             <select className="input w-auto flex-1" value={metric} onChange={(e) => setMetric(e.target.value as MetricKey)}>
@@ -126,6 +154,7 @@ export default function Home() {
                     <span className="text-neutral-600 dark:text-neutral-400">
                       {eur(e.listing.price)} · {e.listing.size_m2} m² · {e.listing.rooms} hab.
                       {e.nearest ? ` · ${e.nearest.walk_min} min a ${e.nearest.campus.name}` : " · sin ubicar"}
+                      {cityId === "all" && ` · ${e.city.name}`}
                     </span>
                     <span className="text-xs text-neutral-500">{status}</span>
                   </span>
@@ -136,7 +165,10 @@ export default function Home() {
       </aside>
 
       <div className="min-h-[400px]">
-        <MapView campuses={campuses} points={points} onPointClick={(id) => router.push(`/listing/${id}`)} className="h-full min-h-[400px] w-full" />
+        <MapView
+          campuses={cityId === "all" ? campuses : campuses.filter((c) => c.city_id === cityId)}
+          center={selectedCity ? { lat: selectedCity.lat, lng: selectedCity.lng } : { lat: 40.2, lng: -3.7, zoom: 6 }}
+          points={points} onPointClick={(id) => router.push(`/listing/${id}`)} className="h-full min-h-[400px] w-full" />
       </div>
     </div>
   );

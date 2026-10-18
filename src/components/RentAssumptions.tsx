@@ -4,10 +4,11 @@ import { useState } from "react";
 import type { AppConfig } from "@/lib/config";
 import { rentableRooms, wholeRent } from "@/lib/finance";
 import { eur, num } from "@/lib/format";
-import type { Listing, ListingInput } from "@/lib/types";
+import type { City, Listing, ListingInput } from "@/lib/types";
 
 interface Props {
   listing: Listing;
+  city: City;
   config: AppConfig;
   capped: boolean;
   onPatch: (input: ListingInput) => Promise<string | null>;
@@ -21,7 +22,7 @@ const toNum = (s: string) => (s.trim() === "" ? null : Number(s.replace(",", "."
  * Los supuestos de alquiler, a la vista y editables: de ellos depende todo el cálculo.
  * Vacío = valor por defecto de Ajustes (con su fuente).
  */
-export default function RentAssumptions({ listing: l, config: cfg, capped, onPatch, onToggleCap }: Props) {
+export default function RentAssumptions({ listing: l, city, config: cfg, capped, onPatch, onToggleCap }: Props) {
   const [roomRent, setRoomRent] = useState(toStr(l.room_rent));
   const [whole, setWhole] = useState(toStr(l.whole_rent));
   const [rooms, setRooms] = useState(toStr(l.rentable_rooms));
@@ -43,7 +44,7 @@ export default function RentAssumptions({ listing: l, config: cfg, capped, onPat
     setBusy(false);
   }
 
-  const defaultWhole = Math.round(l.size_m2 * cfg.whole_rent_m2_default);
+  const defaultWhole = Math.round(l.size_m2 * city.whole_rent_m2);
 
   return (
     <form onSubmit={apply} className="mb-4 flex flex-col gap-3 border border-orange-200 bg-orange-50 p-3 text-sm dark:border-orange-900 dark:bg-orange-950/30">
@@ -54,9 +55,9 @@ export default function RentAssumptions({ listing: l, config: cfg, capped, onPat
       <div className="grid gap-3 sm:grid-cols-3">
         <label className="flex flex-col gap-1">
           <span>Renta por habitación (€/mes)</span>
-          <input className="input" inputMode="decimal" placeholder={String(cfg.room_rent_default)} value={roomRent} onChange={(e) => setRoomRent(e.target.value)} />
+          <input className="input" inputMode="decimal" placeholder={String(city.room_rent)} value={roomRent} onChange={(e) => setRoomRent(e.target.value)} />
           <span className="text-xs text-neutral-500">
-            {l.room_rent == null ? `Usando ${eur(cfg.room_rent_default)}: media de Zaragoza (HousingAnywhere, 2025), editable en Ajustes` : "Valor tuyo"}
+            {l.room_rent == null ? `Usando ${eur(city.room_rent)}: referencia de ${city.name} (${city.rent_source || "sin fuente"}), editable en Ajustes` : "Valor tuyo"}
           </span>
         </label>
         <label className="flex flex-col gap-1">
@@ -64,7 +65,7 @@ export default function RentAssumptions({ listing: l, config: cfg, capped, onPat
           <input className="input" inputMode="decimal" placeholder={String(defaultWhole)} value={whole} onChange={(e) => setWhole(e.target.value)} />
           <span className="text-xs text-neutral-500">
             {l.whole_rent == null
-              ? `Usando ${eur(wholeRent(l, cfg))}: ${l.size_m2} m² × ${num(cfg.whole_rent_m2_default, 1)} €/m² (media de Zaragoza, idealista ago. 2026)`
+              ? `Usando ${eur(wholeRent(l, city))}: ${l.size_m2} m² × ${num(city.whole_rent_m2, 1)} €/m² (referencia de ${city.name})`
               : "Valor tuyo"}
           </span>
         </label>
@@ -88,7 +89,7 @@ export default function RentAssumptions({ listing: l, config: cfg, capped, onPat
           Aplicar el tope del decreto: lo que cobras por todas las habitaciones no puede superar la renta del piso entero.
           {cfg.cap_rooms_to_whole && capped && (
             <span className="block text-amber-700">
-              Ahora mismo está recortando tus habitaciones a {eur(wholeRent(l, cfg))} al mes en total. Desmárcalo para ver el cálculo sin tope.
+              Ahora mismo está recortando tus habitaciones a {eur(wholeRent(l, city))} al mes en total. Desmárcalo para ver el cálculo sin tope.
             </span>
           )}
           <span className="block text-xs text-neutral-500">Afecta a todos los pisos (es un ajuste general).</span>

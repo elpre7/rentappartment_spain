@@ -9,7 +9,7 @@ import type { AppConfig } from "@/lib/config";
 import type { Evaluated } from "@/lib/evaluate";
 import type { Scenario } from "@/lib/finance";
 import { eur, num, pct } from "@/lib/format";
-import { STATUSES, type Campus, type ListingInput } from "@/lib/types";
+import { STATUSES, type Campus, type City, type ListingInput } from "@/lib/types";
 
 type Data = Evaluated & { config: AppConfig };
 
@@ -66,6 +66,7 @@ export default function ListingClient({ id }: { id: number }) {
   const router = useRouter();
   const [data, setData] = useState<Data | null>(null);
   const [campuses, setCampuses] = useState<Campus[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [formKey, setFormKey] = useState(0);
 
@@ -77,6 +78,9 @@ export default function ListingClient({ id }: { id: number }) {
     fetch("/api/campuses")
       .then((r) => r.json())
       .then((d) => setCampuses(d.campuses));
+    fetch("/api/cities")
+      .then((r) => r.json())
+      .then((d) => setCities(d.cities));
   }, [id]);
 
   async function patch(input: ListingInput): Promise<string | null> {
@@ -120,7 +124,7 @@ export default function ListingClient({ id }: { id: number }) {
         <div>
           <h1 className="text-2xl font-bold">{l.title || `Piso ${l.id}`}</h1>
           <p className="text-neutral-600 dark:text-neutral-400">
-            {l.address && <>{l.address} · </>}
+            {data.city.name} · {l.address && <>{l.address} · </>}
             {eur(l.price)} · {l.size_m2} m² · {l.rooms} hab.
             {l.bathrooms != null && <> · {l.bathrooms} baños</>}
             {l.floor && <> · {l.floor}</>}
@@ -158,7 +162,7 @@ export default function ListingClient({ id }: { id: number }) {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="card lg:col-span-2">
           <h2 className="mb-3 font-semibold">Por habitaciones o entero, año completo</h2>
-          <RentAssumptions key={formKey} listing={l} config={cfg} capped={a.rooms.capped} onPatch={patch} onToggleCap={toggleCap} />
+          <RentAssumptions key={formKey} listing={l} city={data.city} config={cfg} capped={a.rooms.capped} onPatch={patch} onToggleCap={toggleCap} />
           <ScenarioTable rooms={a.rooms} whole={a.whole} mortgage={cfg.use_mortgage} />
           {anyCapped && (
             <p className="mt-3 text-xs text-amber-700">
@@ -178,7 +182,7 @@ export default function ListingClient({ id }: { id: number }) {
             <table className="w-full">
               <tbody>
                 <Row label="Precio" a={eur(a.price)} b="" />
-                <Row label={`ITP (${pct(cfg.itp_pct, 0)})`} a={eur(a.itp)} b="" />
+                <Row label={`ITP ${data.city.region} (${pct(data.city.itp_pct, 0)})`} a={eur(a.itp)} b="" />
                 <Row label="Notaría, registro, gestoría, tasación" a={eur(a.purchase_costs - a.itp)} b="" />
                 <Row label="Muebles" a={eur(a.rooms.furniture)} b="" />
                 {l.reform_cost > 0 && <Row label="Reforma" a={eur(l.reform_cost)} b="" />}
@@ -210,7 +214,7 @@ export default function ListingClient({ id }: { id: number }) {
 
       <div className="card">
         <h2 className="mb-4 font-semibold">Editar datos y supuestos</h2>
-        <ListingForm key={formKey} initial={l} campuses={campuses} submitLabel="Guardar cambios" showOverrides onSubmit={patch} />
+        <ListingForm key={formKey} initial={l} cities={cities} campuses={campuses} submitLabel="Guardar cambios" showOverrides onSubmit={patch} />
       </div>
     </div>
   );

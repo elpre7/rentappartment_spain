@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { DEFAULT_CONFIG, type AppConfig } from "./config.ts";
-import { analyze, monthlyPayment, verdict } from "./finance.ts";
+import { analyze as analyzeWith, monthlyPayment, verdict, type Market } from "./finance.ts";
 import type { Listing } from "./types.ts";
 
 const base: Listing = {
   id: 1,
+  city_id: "zaragoza",
   url: "",
   external_id: "",
   title: "",
@@ -29,6 +30,10 @@ const base: Listing = {
   created_at: "",
   updated_at: "",
 };
+
+// Zaragoza, como en la versión de una sola ciudad.
+const ZGZ: Market = { room_rent: 375, whole_rent_m2: 12.3, itp_pct: 0.08 };
+const analyze = (l: Listing, cfg: AppConfig) => analyzeWith(l, cfg, ZGZ);
 
 const near = (a: number, b: number, eps = 0.01) => assert.ok(Math.abs(a - b) < eps, `${a} ≉ ${b}`);
 
@@ -91,4 +96,12 @@ test("veredicto: falla sin ubicación o lejos del campus", () => {
   assert.equal(verdict(a, 10, cfg).ok, true);
   assert.deepEqual(verdict(a, null, cfg).reasons, ["sin ubicación"]);
   assert.deepEqual(verdict(a, 60, cfg).reasons, ["lejos del campus"]);
+});
+
+test("las rentas de referencia y el ITP salen de la ciudad", () => {
+  const jaen: Market = { room_rent: 230, whole_rent_m2: 7.5, itp_pct: 0.07 };
+  const a = analyzeWith(base, DEFAULT_CONFIG, jaen);
+  assert.equal(a.rooms.monthly_rent, 920);
+  assert.equal(a.whole.monthly_rent, 750);
+  near(a.itp, 14000);
 });
