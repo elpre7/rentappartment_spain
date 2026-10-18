@@ -56,7 +56,7 @@ export const DEFAULT_CONFIG: AppConfig = {
 
   vacancy_months_rooms: 1.5,
   vacancy_months_whole: 1,
-  utilities_monthly_rooms: 180,
+  utilities_monthly_rooms: 0,
   home_insurance_annual: 300,
   default_insurance_pct: 0.04,
   maintenance_pct: 0.05,
@@ -107,7 +107,12 @@ export const CONFIG_SECTIONS: {
     fields: [
       { key: "vacancy_months_rooms", label: "Meses vacíos al año (por habitaciones)", kind: "num", help: "Verano: los estudiantes se van en julio/agosto." },
       { key: "vacancy_months_whole", label: "Meses vacíos al año (piso entero)", kind: "num" },
-      { key: "utilities_monthly_rooms", label: "Suministros que pagas tú (por habitaciones, €/mes)", kind: "eur", help: "Luz, agua, gas e internet." },
+      {
+        key: "utilities_monthly_rooms",
+        label: "Suministros que pagas tú (por habitaciones, €/mes)",
+        kind: "eur",
+        help: "0 = los pagan los inquilinos. Pon un importe solo si alquilas con gastos incluidos (luz, agua, gas, internet).",
+      },
       { key: "home_insurance_annual", label: "Seguro de hogar (€/año)", kind: "eur" },
       { key: "default_insurance_pct", label: "Seguro de impago (% de la renta)", kind: "pct" },
       { key: "maintenance_pct", label: "Mantenimiento (% de la renta)", kind: "pct" },

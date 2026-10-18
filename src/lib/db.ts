@@ -85,6 +85,9 @@ function migrate(d: Database.Database) {
     }
   }
   d.exec("CREATE INDEX IF NOT EXISTS idx_listings_city ON listings(city_id)");
+  // Antes los suministros por habitaciones los pagaba el propietario (180 €/mes por defecto);
+  // ahora por defecto los pagan los inquilinos. Solo se cambia si seguía el valor antiguo.
+  d.prepare("UPDATE settings SET value = '0' WHERE key = 'utilities_monthly_rooms' AND value = '180'").run();
 }
 
 /**

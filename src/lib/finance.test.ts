@@ -90,6 +90,13 @@ test("el impuesto nunca es negativo", () => {
   assert.equal(a.whole.tax, 0);
 });
 
+test("por defecto los suministros los pagan los inquilinos", () => {
+  const a = analyze(base, DEFAULT_CONFIG);
+  assert.equal(a.rooms.opex.some((o) => o.label === "Suministros"), false);
+  const b = analyze(base, { ...DEFAULT_CONFIG, utilities_monthly_rooms: 150 });
+  near(b.rooms.opex.find((o) => o.label === "Suministros")!.amount, 150 * 10.5);
+});
+
 test("veredicto: falla sin ubicación o lejos del campus", () => {
   const cfg: AppConfig = { ...DEFAULT_CONFIG, net_yield_good: 0, coc_good: -1 };
   const a = analyze(base, cfg);
