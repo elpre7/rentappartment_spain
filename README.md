@@ -68,6 +68,7 @@ Comunes a todas las ciudades (Ajustes):
 | Hipoteca | fija, 70 % al 3,5 % a 30 años | supuesto |
 | Meses vacíos | 1,5 por habitaciones, 1 entero | verano |
 | Suministros | 0 € | los pagan los inquilinos; pon un importe si alquilas con gastos incluidos |
+| Muebles | 1.200 € por habitación + 2.500 € zonas comunes, renovados cada 10 años | la parte de cada año cuenta como gasto |
 | Impuesto | 19 % sobre el rendimiento neto | IRNR para residentes en la UE |
 | Tope por habitaciones | desactivado | si se activa, la suma de las habitaciones no puede superar la renta del piso entero |
 

@@ -120,6 +120,12 @@ export const CONFIG_SECTIONS: {
       { key: "ibi_pct_of_price", label: "IBI estimado (% del precio, si no lo pones a mano)", kind: "pct" },
       { key: "furniture_per_room", label: "Muebles por habitación (€)", kind: "eur" },
       { key: "furniture_common", label: "Muebles zonas comunes (€)", kind: "eur" },
+      {
+        key: "furniture_years",
+        label: "Cada cuántos años cambias los muebles",
+        kind: "num",
+        help: "Cada año se descuenta la parte proporcional como gasto (y como amortización en el impuesto). 0 = no se cuenta.",
+      },
     ],
   },
   {
@@ -140,7 +146,6 @@ export const CONFIG_SECTIONS: {
       { key: "rental_reduction", label: "Reducción por alquiler de vivienda", kind: "pct", help: "Habitaciones/temporada para estudiantes: normalmente 0 %." },
       { key: "building_share", label: "Parte del precio que es construcción", kind: "pct", help: "Según el valor catastral del recibo del IBI." },
       { key: "building_depreciation", label: "Amortización anual de la construcción", kind: "pct" },
-      { key: "furniture_years", label: "Años para amortizar muebles", kind: "num" },
     ],
   },
   {

@@ -98,6 +98,18 @@ test("por defecto los suministros los pagan los inquilinos", () => {
   near(b.rooms.opex.find((o) => o.label === "Suministros")!.amount, 150 * 10.5);
 });
 
+test("muebles: se reponen cada 10 años y no se descuentan dos veces en el impuesto", () => {
+  const cfg: AppConfig = { ...DEFAULT_CONFIG, use_mortgage: false };
+  const a = analyze(base, cfg);
+  const furniture = 4 * cfg.furniture_per_room + cfg.furniture_common;
+  near(a.rooms.opex.find((o) => o.label === "Reposición de muebles")!.amount, furniture / 10);
+  const none = analyze(base, { ...cfg, furniture_years: 0 });
+  near(none.rooms.noi - a.rooms.noi, furniture / 10);
+  // Los muebles se descuentan UNA vez en el impuesto: sin ellos, la base sube exactamente furniture/10.
+  assert.ok(a.rooms.tax > 0);
+  near(none.rooms.tax - a.rooms.tax, (furniture / 10) * cfg.tax_rate);
+});
+
 test("veredicto: falla sin ubicación o lejos del campus", () => {
   const cfg: AppConfig = { ...DEFAULT_CONFIG, net_yield_good: 0, coc_good: -1 };
   const a = analyze(base, cfg);

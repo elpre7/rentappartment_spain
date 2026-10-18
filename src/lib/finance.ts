@@ -80,6 +80,8 @@ export function analyze(l: Listing, cfg: AppConfig, market: Market): Analysis {
   const ibi = l.ibi_annual ?? price * cfg.ibi_pct_of_price;
   const community = (l.community_monthly ?? 0) * 12;
   const furniture = nRooms * cfg.furniture_per_room + cfg.furniture_common;
+  // Los muebles se cambian cada `furniture_years`: se aparta cada año la parte proporcional.
+  const furnitureReserve = cfg.furniture_years > 0 ? furniture / cfg.furniture_years : 0;
 
   function build(key: ScenarioKey): Scenario {
     const isRooms = key === "rooms";
@@ -101,6 +103,7 @@ export function analyze(l: Listing, cfg: AppConfig, market: Market): Analysis {
       { label: "Seguro de impago", amount: effective * cfg.default_insurance_pct },
       { label: "Mantenimiento", amount: effective * cfg.maintenance_pct },
       { label: "Gestión", amount: effective * cfg.management_pct },
+      { label: "Reposición de muebles", amount: furnitureReserve },
       ...(isRooms ? [{ label: "Suministros", amount: cfg.utilities_monthly_rooms * occupied }] : []),
     ].filter((o) => o.amount > 0);
     const opexTotal = opex.reduce((s, o) => s + o.amount, 0);
@@ -110,14 +113,15 @@ export function analyze(l: Listing, cfg: AppConfig, market: Market): Analysis {
     const cashInvested = totalInvestment - loan;
     const cashFlow = noi - annualDebt;
 
-    const depreciation =
-      price * cfg.building_share * cfg.building_depreciation +
-      (cfg.furniture_years > 0 ? furniture / cfg.furniture_years : 0);
-    const taxable = Math.max(0, noi - interestY1 - depreciation) * (1 - cfg.rental_reduction);
+    // A Hacienda la reposición de muebles le llega como amortización: se quita del
+    // resultado para no descontarla dos veces.
+    const depreciation = price * cfg.building_share * cfg.building_depreciation + furnitureReserve;
+    const taxable = Math.max(0, noi + furnitureReserve - interestY1 - depreciation) * (1 - cfg.rental_reduction);
     const tax = taxable * cfg.tax_rate;
 
     // Costes fijos (no dependen de la renta) que la renta tiene que cubrir.
-    const fixed = community + ibi + cfg.home_insurance_annual + (isRooms ? cfg.utilities_monthly_rooms * occupied : 0);
+    const fixed =
+      community + ibi + cfg.home_insurance_annual + furnitureReserve + (isRooms ? cfg.utilities_monthly_rooms * occupied : 0);
     const perRoomYear = Math.max(1, nRooms) * occupied * (1 - pctCosts);
     const breakeven = perRoomYear > 0 ? (fixed + annualDebt) / perRoomYear : 0;
 
