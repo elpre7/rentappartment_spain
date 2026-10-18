@@ -37,8 +37,9 @@ const analyze = (l: Listing, cfg: AppConfig) => analyzeWith(l, cfg, ZGZ);
 
 const near = (a: number, b: number, eps = 0.01) => assert.ok(Math.abs(a - b) < eps, `${a} ≉ ${b}`);
 
-test("cuota francesa: 140.000 € al 3,5 % a 25 años ≈ 700,87 €", () => {
+test("cuota francesa: 140.000 € al 3,5 % a 25 años ≈ 700,87 €; a 30 años ≈ 628,66 €", () => {
   near(monthlyPayment(140000, 0.035, 25), 700.87);
+  near(monthlyPayment(140000, 0.035, 30), 628.66);
   near(monthlyPayment(1200, 0, 1), 100);
   assert.equal(monthlyPayment(0, 0.035, 25), 0);
 });

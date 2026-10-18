@@ -88,6 +88,8 @@ function migrate(d: Database.Database) {
   // Antes los suministros por habitaciones los pagaba el propietario (180 €/mes por defecto);
   // ahora por defecto los pagan los inquilinos. Solo se cambia si seguía el valor antiguo.
   d.prepare("UPDATE settings SET value = '0' WHERE key = 'utilities_monthly_rooms' AND value = '180'").run();
+  // El plazo por defecto pasó de 25 a 30 años; solo se cambia si seguía el valor antiguo.
+  d.prepare("UPDATE settings SET value = '30' WHERE key = 'mortgage_years' AND value = '25'").run();
 }
 
 /**

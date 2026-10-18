@@ -52,7 +52,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   use_mortgage: true,
   ltv: 0.7,
   mortgage_rate: 0.035,
-  mortgage_years: 25,
+  mortgage_years: 30,
 
   vacancy_months_rooms: 1.5,
   vacancy_months_whole: 1,
@@ -98,7 +98,7 @@ export const CONFIG_SECTIONS: {
     fields: [
       { key: "use_mortgage", label: "Comprar con hipoteca", kind: "bool" },
       { key: "ltv", label: "Financiación sobre precio (LTV)", kind: "pct", help: "No residentes suelen conseguir 60–70 %." },
-      { key: "mortgage_rate", label: "Tipo de interés", kind: "pct" },
+      { key: "mortgage_rate", label: "Tipo de interés fijo", kind: "pct", help: "Hipoteca a tipo fijo: la misma cuota todo el plazo." },
       { key: "mortgage_years", label: "Plazo (años)", kind: "num" },
     ],
   },

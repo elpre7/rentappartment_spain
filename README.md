@@ -65,7 +65,7 @@ Comunes a todas las ciudades (Ajustes):
 
 | Supuesto | Valor | Nota |
 | --- | --- | --- |
-| Hipoteca | 70 % al 3,5 % a 25 años | supuesto |
+| Hipoteca | fija, 70 % al 3,5 % a 30 años | supuesto |
 | Meses vacíos | 1,5 por habitaciones, 1 entero | verano |
 | Suministros | 0 € | los pagan los inquilinos; pon un importe si alquilas con gastos incluidos |
 | Impuesto | 19 % sobre el rendimiento neto | IRNR para residentes en la UE |
