@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import ListingForm from "@/components/ListingForm";
+import RentAssumptions from "@/components/RentAssumptions";
 import type { AppConfig } from "@/lib/config";
 import type { Evaluated } from "@/lib/evaluate";
 import type { Scenario } from "@/lib/finance";
@@ -91,6 +92,16 @@ export default function ListingClient({ id }: { id: number }) {
     return null;
   }
 
+  async function toggleCap(on: boolean) {
+    await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cap_rooms_to_whole: on }),
+    });
+    const res = await fetch(`/api/listings/${id}`);
+    if (res.ok) setData(await res.json());
+  }
+
   async function remove() {
     if (!confirm("¿Borrar este piso?")) return;
     await fetch(`/api/listings/${id}`, { method: "DELETE" });
@@ -147,11 +158,12 @@ export default function ListingClient({ id }: { id: number }) {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="card lg:col-span-2">
           <h2 className="mb-3 font-semibold">Por habitaciones o entero, año completo</h2>
+          <RentAssumptions key={formKey} listing={l} config={cfg} capped={a.rooms.capped} onPatch={patch} onToggleCap={toggleCap} />
           <ScenarioTable rooms={a.rooms} whole={a.whole} mortgage={cfg.use_mortgage} />
           {anyCapped && (
             <p className="mt-3 text-xs text-amber-700">
-              * La renta por habitaciones se ha recortado a la del piso entero por el tope del decreto. Puedes desactivarlo en Ajustes
-              para ver el escenario sin tope.
+              * La renta por habitaciones se ha recortado a la del piso entero por el tope del decreto. Puedes desactivarlo arriba
+              para ver el cálculo sin tope.
             </p>
           )}
           <p className="mt-3 text-xs text-neutral-500">

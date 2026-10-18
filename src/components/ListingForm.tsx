@@ -21,12 +21,8 @@ const BASIC: FieldDef[] = [
   { key: "ibi_annual", label: "IBI (€/año)", type: "number", help: "Vacío = estimado con el % de Ajustes" },
 ];
 
-const OVERRIDES: FieldDef[] = [
-  { key: "rentable_rooms", label: "Habitaciones que alquilas", type: "number", help: "Vacío = todas" },
-  { key: "room_rent", label: "Renta por habitación (€/mes)", type: "number", help: "Vacío = la de Ajustes" },
-  { key: "whole_rent", label: "Renta piso entero (€/mes)", type: "number", help: "Vacío = €/m² de Ajustes × m²" },
-  { key: "reform_cost", label: "Reforma (€)", type: "number" },
-];
+// Las rentas se editan arriba, en «Supuestos de alquiler» (RentAssumptions).
+const OVERRIDES: FieldDef[] = [{ key: "reform_cost", label: "Reforma (€)", type: "number" }];
 
 type FormState = Record<string, string>;
 
